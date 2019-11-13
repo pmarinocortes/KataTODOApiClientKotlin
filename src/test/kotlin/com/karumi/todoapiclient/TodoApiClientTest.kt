@@ -1,16 +1,20 @@
 package com.karumi.todoapiclient
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import todoapiclient.TodoApiClient
 import todoapiclient.dto.TaskDto
+import todoapiclient.exception.ItemNotFoundError
+import todoapiclient.exception.UnknownApiError
 
 class TodoApiClientTest : MockWebServerTest() {
 
     private lateinit var apiClient: TodoApiClient
+
+    companion object {
+        const val TASK_ID = "1"
+    }
 
     @Before
     override fun setUp() {
@@ -45,6 +49,47 @@ class TodoApiClientTest : MockWebServerTest() {
 
         assertEquals(200, tasks.size.toLong())
         assertTaskContainsExpectedValues(tasks[0])
+    }
+
+    @Test
+    fun parseTaskProperlyGettingJustOneTask() {
+        enqueueMockResponse(200, "getTaskByIdResponse.json")
+        val task = apiClient.getTaskById(TASK_ID).right!!
+        assertTaskContainsExpectedValues(task)
+
+    }
+
+    @Test
+    fun taskNotFound() {
+        enqueueMockResponse(404)
+        val error = apiClient.getTaskById(TASK_ID).left
+        assertEquals(ItemNotFoundError, error)
+    }
+
+    @Test
+    fun serverError() {
+        enqueueMockResponse(500)
+
+        val error = apiClient.allTasks.left
+        assertEquals(UnknownApiError(500), error)
+    }
+
+    @Test
+    fun getTaskByIdRequestContainsTheIdAsPartOfThePath() {
+        enqueueMockResponse(200, "getTaskByIdResponse.json")
+
+        apiClient.getTaskById(TASK_ID)
+
+        assertGetRequestSentTo("/todos/$TASK_ID")
+    }
+
+    @Test
+    fun sendsAcceptAndContentTypeHeaderById() {
+        enqueueMockResponse(200, "getTaskByIdResponse.json")
+
+        apiClient.getTaskById(TASK_ID)
+
+        assertRequestContainsHeader("Accept", "application/json")
     }
 
     private fun assertTaskContainsExpectedValues(task: TaskDto?) {
