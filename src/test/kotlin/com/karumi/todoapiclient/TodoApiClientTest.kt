@@ -119,7 +119,7 @@ class TodoApiClientTest : MockWebServerTest() {
     }
 
     @Test
-    fun error() {
+    fun deleteTaskNotFoundError() {
         enqueueMockResponse(404)
 
         val error = apiClient.deleteTaskById(TASK_ID)
