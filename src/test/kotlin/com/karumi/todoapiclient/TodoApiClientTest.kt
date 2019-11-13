@@ -110,6 +110,23 @@ class TodoApiClientTest : MockWebServerTest() {
         assertRequestBodyEquals("addTaskRequest.json")
     }
 
+    @Test
+    fun deleteTaskByIdContainsCorrectPath() {
+        enqueueMockResponse()
+
+        apiClient.deleteTaskById(TASK_ID)
+        assertDeleteRequestSentTo("/todos/$TASK_ID")
+    }
+
+    @Test
+    fun error() {
+        enqueueMockResponse(404)
+
+        val error = apiClient.deleteTaskById(TASK_ID)
+
+        assertEquals(ItemNotFoundError, error)
+    }
+
     private fun assertTaskContainsExpectedValues(task: TaskDto?) {
         assertTrue(task != null)
         assertEquals(task?.id, "1")
