@@ -14,6 +14,7 @@ class TodoApiClientTest : MockWebServerTest() {
 
     companion object {
         const val TASK_ID = "1"
+        val TASK_CREATED = TaskDto("1","2","Finish this kata",false)
     }
 
     @Before
@@ -90,6 +91,23 @@ class TodoApiClientTest : MockWebServerTest() {
         apiClient.getTaskById(TASK_ID)
 
         assertRequestContainsHeader("Accept", "application/json")
+    }
+
+    @Test
+    fun addTaskRequestContainsCorrectPath() {
+        enqueueMockResponse(201, "addTaskResponse.json")
+
+        apiClient.addTask(TASK_CREATED)
+        assertPostRequestSentTo("/todos")
+    }
+
+    @Test
+    fun addTaskRequestContainsExpectedBody() {
+        enqueueMockResponse(201, "addTaskResponse.json")
+
+        apiClient.addTask(TASK_CREATED)
+
+        assertRequestBodyEquals("addTaskRequest.json")
     }
 
     private fun assertTaskContainsExpectedValues(task: TaskDto?) {
